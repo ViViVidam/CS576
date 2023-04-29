@@ -19,7 +19,7 @@ public class PixelWiseComparetor {
                 total += computeDistanceRGB(pixela,pixelb);
             }
         }
-        return (total/(height*width)) > threhold;
+        return (Math.sqrt(total)/(height*width)) > threhold;
     }
 
     static double computeDistanceRGB(int p1, int p2){
