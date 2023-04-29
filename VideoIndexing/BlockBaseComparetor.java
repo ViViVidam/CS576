@@ -16,7 +16,7 @@ public class BlockBaseComparetor {
         this.threshold = threshold;
     }
 
-    boolean compare(){
+    public boolean compare(){
         double diff = 0;
         int blockCnt = 0;
         for(int i = 0 ; i<this.source.getHeight(); i+=blocksize){
@@ -36,7 +36,7 @@ public class BlockBaseComparetor {
 
         return (diff/blockCnt)>this.threshold;
     }
-    double blockWiseDiff(int x,int y,int targetX,int targetY){
+    public double blockWiseDiff(int x,int y,int targetX,int targetY){
         double cnt = 0;
         double diff = 0;
         for(int i = 0; i < this.blocksize; i++){

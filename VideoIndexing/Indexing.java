@@ -5,14 +5,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Indexing {
-    public static void main(String[] args) throws IOException {
+    private String filename;
+    public Indexing(String filename){
+        this.filename = filename;
+    }
+    public List<List<Integer>> runIndexing()throws IOException{
 //        SceneDetection sceneDetection = new SceneDetection();
 //        List<Integer> keyframeIndices = sceneDetection.SceneSeparation("./InputVideo.rgb");
 //        List<List<Integer>> sceneIndices = KeyframeToScene(keyframeIndices);
 
         ShotDetection shotDetection = new ShotDetection();
-        List<Integer> keyShotIndices = shotDetection.ShotSeparation("./InputVideo.rgb");
-
+        return KeyframeToScene(shotDetection.ShotSeparation(this.filename));
     }
 
     public static List<List<Integer>> KeyframeToScene(List<Integer> keyframeIndices) {

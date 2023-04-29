@@ -11,6 +11,7 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
 
@@ -20,8 +21,8 @@ public class VideoPlayer implements Runnable{
     private BlockingQueue<Double> audioQ;
     private String filename;
     private int numFrames;
-    private Vector<Vector<Integer>> arr;
-    public VideoPlayer(String filename, BlockingQueue<Double> queueVideo, BlockingQueue<Double> queueAudio, Vector<Vector<Integer>> arr){
+    private List<List<Integer>> arr;
+    public VideoPlayer(String filename, BlockingQueue<Double> queueVideo, BlockingQueue<Double> queueAudio, List<List<Integer>> arr){
         this.filename = filename;
         this.videoQ = queueVideo;
         this.audioQ = queueAudio;
@@ -49,7 +50,7 @@ public class VideoPlayer implements Runnable{
 
         for(int i = 0; i < this.arr.size(); i++){
             DefaultMutableTreeNode tmp = new DefaultMutableTreeNode("scene"+(i+1));
-            Vector vec = this.arr.get(i);
+            List vec = this.arr.get(i);
             for(int j = 0; j < vec.size(); j++){
                 tmp.add(new DefaultMutableTreeNode("shot"+(j+1)));
             }
@@ -63,6 +64,7 @@ public class VideoPlayer implements Runnable{
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
                 TreePath path = tree.getPathForLocation(e.getX(),e.getY());
+                if(path==null) return;
                 if(path.getPathCount() == 3){
                     DefaultMutableTreeNode leaf = (DefaultMutableTreeNode) path.getLastPathComponent();
                     DefaultMutableTreeNode parent = (DefaultMutableTreeNode) path.getPathComponent(1);
