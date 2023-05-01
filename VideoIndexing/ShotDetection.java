@@ -16,7 +16,7 @@ import java.util.Vector;
 
 public class ShotDetection {
     private int fps;
-    private double GATEVALUE = 2.6;
+    private double GATEVALUE = 2.2;
     ShotDetection(int fps){
         this.fps = fps;
     }
@@ -27,6 +27,62 @@ public class ShotDetection {
                 source.setRGB(i,j,source.getRGB(i,j)/cnt + dst.getRGB(i,j)/cnt);
             }
         }
+    }
+    public List<Integer> shotSeparationRecursive(String inputRGBFile,int loopSize,int beginK) throws IOException {
+        int width = 480;
+        int height = 270;
+        int numPixels = width * height;
+        int numChannels = 3;
+        FileInputStream inputStream = null;
+        byte[] frameData = new byte[numPixels * numChannels];
+        List<Integer> nextCandidates = ShotSeparationJump(inputRGBFile);
+        //nextCandidates.add(90);
+        //nextCandidates.add(180);
+        //nextCandidates.add(270);
+        List<Integer> candidates = null;
+
+        int index = 0;
+        for (int i = 0; i < loopSize; i++) {
+
+            BufferedImage previousFrame = null;
+            BufferedImage currentFrame = null;
+            beginK = beginK + 8;
+            index = 0;
+            BlockBaseComparetor comparetor = new BlockBaseComparetor(8, beginK, this.GATEVALUE);
+            File inputFile = new File(inputRGBFile);
+            try {
+                inputStream = new FileInputStream(inputFile);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+
+            candidates = nextCandidates;
+            nextCandidates = new ArrayList<>();
+            System.out.println("list of canidates: " + candidates);
+            int frameNumber = 0;
+            while (inputStream.read(frameData) != -1) {
+                frameNumber++;
+                if (frameNumber % this.fps != 0) continue;
+                currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+                currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
+
+                BufferedImage grayFrame = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+                Graphics2D g = grayFrame.createGraphics();
+                g.drawImage(currentFrame, 0, 0, null);
+                g.dispose();
+                if (index<candidates.size() && frameNumber == candidates.get(index)) {
+                    //System.out.println(111);
+                    index++;
+                    if (comparetor.compare(previousFrame, grayFrame)){
+                        nextCandidates.add(frameNumber);
+                    }
+                }
+                previousFrame = grayFrame;
+            }
+        }
+        System.out.println("list of canidates: " + candidates);
+        return candidates;
     }
     public List<Integer> ShotSeparationJump(String inputRGBFile) throws IOException {
         File inputFile = new File(inputRGBFile);
@@ -47,8 +103,8 @@ public class ShotDetection {
         BufferedImage currentFrame = null;
         BufferedImage previousFrame = null;
         List<Integer> keyframeIndices = new ArrayList<>();
-        keyframeIndices.add(0);
-
+        //keyframeIndices.add(0);
+        BlockBaseComparetor comparetor = new BlockBaseComparetor(8,16,this.GATEVALUE);
         boolean isFirstFrame = true;
         int frameNumber = -1;
 
@@ -66,8 +122,10 @@ public class ShotDetection {
             g.dispose();
 
             if (!isFirstFrame) {
-                BlockBaseComparetor comparetor = new BlockBaseComparetor(previousFrame,grayFrame,8,16,this.GATEVALUE);
-                comparetor.compare();
+
+                if(comparetor.compare(previousFrame,grayFrame)){
+                    keyframeIndices.add(frameNumber);
+                }
             }
 
             previousFrame = grayFrame;
@@ -75,7 +133,7 @@ public class ShotDetection {
             isFirstFrame = false;
         }
         keyframeIndices.add(frameNumber - 1);
-        System.out.println(keyframeIndices);
+        //System.out.println(keyframeIndices);
         return keyframeIndices;
     }
     public List<Integer> ShotSeparationAvg(String inputRGBFile) throws IOException {
@@ -104,7 +162,7 @@ public class ShotDetection {
         keyframeIndices.add(0);
         boolean isFirstFrame = true;
         int frameNumber = -1;
-
+        BlockBaseComparetor comparetor = new BlockBaseComparetor(8,16,this.GATEVALUE);
         // Loop through the video frames
         while (inputStream.read(frameData) != -1) {
             frameNumber++;
@@ -122,8 +180,7 @@ public class ShotDetection {
             }
             else{
                 if(marker[0] && marker[1]){
-                    BlockBaseComparetor comparetor = new BlockBaseComparetor(s.get(index),s.get((index+1)%2),8,16,this.GATEVALUE);
-                    comparetor.compare();
+                    comparetor.compare(s.get(index),s.get((index+1)%2));
                     index = (index + 1) % s.size();
                     marker[index] = false;
                     s.set(index,null);
@@ -131,19 +188,6 @@ public class ShotDetection {
                 else index = (index + 1) % s.size();
                 isFirstFrame = true;
             }
-            /*BufferedImage grayFrame = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-            Graphics2D g = grayFrame.createGraphics();
-            g.drawImage(currentFrame, 0, 0, null);
-            g.dispose();
-
-            if (!isFirstFrame) {
-                BlockBaseComparetor comparetor = new BlockBaseComparetor(previousFrame,grayFrame,8,16,this.GATEVALUE);
-                comparetor.compare();
-            }
-
-            previousFrame = grayFrame;
-
-            isFirstFrame = false;*/
         }
         keyframeIndices.add(frameNumber - 1);
         System.out.println(keyframeIndices);
