@@ -14,7 +14,8 @@ public class Player {
         //call preIndexing
         List<List<Integer>> arr = null;
         try {
-            Indexing indexer = new Indexing(videoFile);
+            System.out.println("Indexing....");
+            Indexing indexer = new Indexing(videoFile,30);
             arr = indexer.runIndexing();
 
         }catch (IOException e){

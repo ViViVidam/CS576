@@ -2,3 +2,5 @@
 *.mp4
 *.txt
 *.rgb
+./out/*
+.idea/*
