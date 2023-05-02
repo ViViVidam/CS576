@@ -21,7 +21,10 @@ public class VideoPlayer implements Runnable{
     private BlockingQueue<Message> audioQ;
     private String filename;
     private int numFrames;
-    private float timeLength;
+    final private float timeLength;
+    private int fps;
+    private double checkInterval = 0.5;
+    //private int checkIntervalNum;
     private boolean paused;
     private List<List<Integer>> arr;
     public VideoPlayer(String filename, BlockingQueue<Message> queueVideo, BlockingQueue<Message> queueAudio, List<List<Integer>> arr,float timeLength){
@@ -190,7 +193,7 @@ public class VideoPlayer implements Runnable{
             long pixelPerFrame = width * height * 3;
             numFrames = (int) (raf.length() / pixelPerFrame);
             System.out.println(raf.length() + " number of frames: " + this.numFrames);
-            int fps = Math.round(this.numFrames / this.timeLength);
+            this.fps = Math.round(this.numFrames / this.timeLength);
             double videoTime = this.numFrames*1.0 / fps;
             System.out.println("setting fps to " + fps + ", Video time size: " + videoTime);
             FileChannel channel = raf.getChannel();
@@ -216,7 +219,7 @@ public class VideoPlayer implements Runnable{
                             } else {
                                 pausetime = System.currentTimeMillis();
                             }
-                            System.out.println("switch");
+                            //System.out.println("switch");
                             audioQ.add(new Message(Message.SWITCH, i * 1.0 / numFrames));
                         }else {
                             long second = (long) (message.target * videoTime);
@@ -261,7 +264,7 @@ public class VideoPlayer implements Runnable{
                 if(i%fps == 0 && !jumped) {
                     long eclipse = System.currentTimeMillis() - time1 + bias1 - bias2;
                     double lag = eclipse - i*1000.0/fps;
-                    sleepTime -= lag / fps;
+                    sleepTime -= 1.5 * lag / fps;
                 }
             }
             System.out.println("Time using: " + (System.currentTimeMillis() - startime) / 1000);
