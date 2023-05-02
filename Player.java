@@ -32,7 +32,7 @@ public class Player {
         //call preIndexing
         float timeLength = getTimeLength(audioFile);
         List<List<Integer>> arr = null;
-        try {
+        /*try {
             System.out.println("Indexing....");
             Indexing indexer = new Indexing(videoFile,30);
             arr = indexer.runIndexing();
@@ -43,14 +43,14 @@ public class Player {
         if(arr==null){
             System.out.println("not correctly indexed, terminated");
             return;
-        }
+        }*/
         //System.out.println(arr);
         BlockingQueue<Message> audioQ = new ArrayBlockingQueue<Message>(100);
         BlockingQueue<Message> videoQ = new ArrayBlockingQueue<Message>(100);
         //videoQ.add(new Message(Message.SWITCH,0));
         //audioQ.add(new Message(Message.SWITCH,0));
         AudioPlayer ap = new AudioPlayer(audioFile,audioQ);
-        VideoPlayer vp = new VideoPlayer(videoFile,videoQ,audioQ,arr,timeLength);
+        VideoPlayer vp = new VideoPlayer(videoFile,videoQ,audioQ,new ArrayList<>(),timeLength);
         Thread apThread = new Thread(ap);
         Thread vpThread = new Thread(vp);
         //processOne.command("java .\\VideoPlayer.java");
