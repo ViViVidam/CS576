@@ -17,24 +17,26 @@ import java.util.concurrent.BlockingQueue;
 
 // using BlockQueue
 public class VideoPlayer implements Runnable{
-    private BlockingQueue<Double> videoQ;
-    private BlockingQueue<Double> audioQ;
+    private BlockingQueue<Message> videoQ;
+    private BlockingQueue<Message> audioQ;
     private String filename;
     private int numFrames;
+    private float timeLength;
+    private boolean paused;
     private List<List<Integer>> arr;
-    public VideoPlayer(String filename, BlockingQueue<Double> queueVideo, BlockingQueue<Double> queueAudio, List<List<Integer>> arr){
+    public VideoPlayer(String filename, BlockingQueue<Message> queueVideo, BlockingQueue<Message> queueAudio, List<List<Integer>> arr,float timeLength){
         this.filename = filename;
         this.videoQ = queueVideo;
         this.audioQ = queueAudio;
         this.numFrames = 0;
         this.arr = new Vector<>(arr);
+        this.timeLength = timeLength;
     }
     @Override
     public void run() {
         File file = new File(this.filename); // "./InputVideo.rgb" name of the RGB video file
         int width = 480; // width of the video frames
         int height = 270; // height of the video frames
-        int fps = 30; // frames per second of the video
          // number of frames in the video
         // create the JFrame and JLabel to display the video
         JFrame frame = new JFrame("Video Display");
@@ -70,35 +72,65 @@ public class VideoPlayer implements Runnable{
                     DefaultMutableTreeNode parent = (DefaultMutableTreeNode) path.getPathComponent(1);
                     int x = Integer.parseInt(leaf.getUserObject().toString().substring(4));
                     int y = Integer.parseInt(parent.getUserObject().toString().substring(5));
-                    double target = (double)arr.get(y-1).get(x-1);
-                    //System.out.println(target);
-                    videoQ.add(target);
-                    audioQ.add(target);
+                    int target = arr.get(y-1).get(x-1);
+                    System.out.println(numFrames);
+                    videoQ.add(new Message(Message.JUMP,target / numFrames));
+                    audioQ.add(new Message(Message.JUMP,target / numFrames));
                 }
             }
         });
-        c.fill = GridBagConstraints.VERTICAL;
+
+        //video screen
+        c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.CENTER;
-        c.weightx = 0.5;
         c.gridx = 1;
+        c.gridheight = 3;
         c.gridy = 0;
         frame.getContentPane().add(label,c);
-
-        c.fill = GridBagConstraints.VERTICAL;
+        //progress bar
+        c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.CENTER;
-        c.weightx = 0.5;
+        //c.weightx = c.weighty = 1;
+        c.gridheight = 1;
         c.gridx = 1;
-        c.gridy = 1;
+        c.gridy = 3;
         frame.getContentPane().add(progressBar,c);
 
-        c.fill = GridBagConstraints.CENTER;
+        // button pane
+        JPanel buttonPanel = new JPanel();
+        Button stop = new Button("stop");
+        Button pause = new Button("pause");
+
+        buttonPanel.add(stop);
+        buttonPanel.add(pause);
+        c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.CENTER;
-        c.weightx = 0.5;
+        c.weighty = 1;
+        c.gridx = 1;
+        c.gridy = 4;
+        frame.getContentPane().add(buttonPanel,c);
+
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.CENTER;
+        //c.weightx = c.weighty = 1;
+        c.gridheight = 1;
+        c.gridx = 1;
+        c.gridy = 3;
+        frame.getContentPane().add(progressBar,c);
+
+
+        JScrollPane pane = new JScrollPane();
+        pane.setPreferredSize(new Dimension(width, height+100));
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.CENTER;
+        c.weightx = c.weighty = 1;
         c.gridx = 0;
         c.gridy = 0;
-        c.gridheight = 2;
+        c.gridheight = 5;
         c.gridwidth = 1;
-        frame.getContentPane().add(tree,c);
+        frame.getContentPane().add(pane.add(tree),c);
+
+
         progressBar.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -106,13 +138,46 @@ public class VideoPlayer implements Runnable{
                 //System.out.println("clicked");
                 int x = e.getX();
                 //System.out.println(progressBar.getWidth()+" " + x);
-                audioQ.add(1.0*x/progressBar.getWidth());
-                videoQ.add(1.0*x/progressBar.getWidth());
+                audioQ.add(new Message(Message.JUMP,1.0*x/progressBar.getWidth()));
+                videoQ.add(new Message(Message.JUMP,1.0*x/progressBar.getWidth()));
             }
         });
         frame.pack();
         frame.setVisible(true);
 
+        label.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                videoQ.add(new Message(Message.SWITCH,0));
+            }
+        });
+        pause.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if(paused){
+                    pause.setLabel("pause");
+                }
+                else
+                    pause.setLabel("play");
+                videoQ.add(new Message(Message.SWITCH,0));
+
+            }
+        });
+
+        stop.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if(!paused) {
+                    videoQ.add(new Message(Message.SWITCH, 0));
+                    pause.setLabel("play");
+                }
+                videoQ.add(new Message(Message.JUMP,0));
+                audioQ.add(new Message(Message.JUMP,0));
+            }
+        });
 
         // read the video file and display each frame
         try {
@@ -120,25 +185,50 @@ public class VideoPlayer implements Runnable{
             long pixelPerFrame = width * height * 3;
             numFrames = (int) (raf.length() / pixelPerFrame);
             System.out.println(raf.length() + " number of frames: " + this.numFrames);
+            int fps = Math.round(this.numFrames / this.timeLength);
             double videoTime = this.numFrames*1.0 / fps;
-            System.out.println("Video time size: " + videoTime);
+            System.out.println("setting fps to " + fps + ", Video time size: " + videoTime);
             FileChannel channel = raf.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(width * height * 3);
             long startime = System.currentTimeMillis();
             long time1;
-            long bias = 0;
-            long sleepTime = 1000 / fps;
+            long bias1 = 0;// count for jump time
+            long bias2 = 0;// count for paused time
+            long sleepTime = (long) (1000 / fps);
             boolean jumped;
+            long pausetime = -1;
             time1 = System.currentTimeMillis();
-            for (int i = 0; i < numFrames; i++) {
+            for (int i = 0; i < numFrames ; i++) {
                 jumped = false;
-                if(this.videoQ.size()>0){
-                    long second = (long) (videoTime * this.videoQ.poll().doubleValue());
-                    channel.position(pixelPerFrame*fps*second);
-                    bias = second*1000;
-                    time1 = System.currentTimeMillis();
-                    i = (int) (fps * second);
-                    jumped = true;
+                if(i%fps == 0 && this.videoQ.size()>0){
+                    while(this.videoQ.size()>0) {
+                        Message message = this.videoQ.poll();
+                        if (message.message == Message.SWITCH) {
+                            paused = !paused;
+                            if (pausetime != -1) {
+                                bias2 += System.currentTimeMillis() - pausetime;
+                                pausetime = -1;
+                            } else {
+                                pausetime = System.currentTimeMillis();
+                            }
+                            System.out.println("switch");
+                            audioQ.add(new Message(Message.SWITCH, i * 1.0 / numFrames));
+                        }else {
+                            long second = (long) (message.target * videoTime);
+                            channel.position(pixelPerFrame * fps * second);
+                            bias1 = second * 1000;
+                            bias2 = 0;
+                            if(pausetime!=-1) pausetime = System.currentTimeMillis();
+                            time1 = System.currentTimeMillis();
+                            i = (int) (fps * second); // -1 so next round it's the start of a new second
+                            jumped = true;
+                        }
+                    }
+                    if(paused && jumped) i--;
+                }
+                if(paused && !jumped){
+                    i--;
+                    continue;
                 }
                 buffer.clear();
                 channel.read(buffer);
@@ -158,14 +248,13 @@ public class VideoPlayer implements Runnable{
                 progressBar.setValue(100*i/numFrames);
                 frame.validate();
                 frame.repaint();
-                //audioLine.write(bytesBuffer, 0, bytesRead);
                 try {
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 if(i%fps == 0 && !jumped) {
-                    long eclipse = System.currentTimeMillis() - time1 + bias;
+                    long eclipse = System.currentTimeMillis() - time1 + bias1 - bias2;
                     double lag = eclipse - i*1000.0/fps;
                     sleepTime -= lag / fps;
                 }

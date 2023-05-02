@@ -8,11 +8,9 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.BlockingQueue;
 
 public class AudioPlayer implements Runnable{
-    private BlockingQueue<Double> messageQ;
-    private BlockingQueue<Float> syncQ;
+    private BlockingQueue<Message> messageQ;
     private String filename;
-    public AudioPlayer(String filename, BlockingQueue<Double> messageQ,BlockingQueue<Float> syncQ){
-        this.syncQ = syncQ;
+    public AudioPlayer(String filename, BlockingQueue<Message> messageQ){
         this.filename = filename;
         this.messageQ = messageQ;
     }
@@ -36,26 +34,32 @@ public class AudioPlayer implements Runnable{
             SourceDataLine audioLine = (SourceDataLine) AudioSystem.getLine(info);
             audioLine.open(format);
             audioLine.start();
-            byte[] bytesBuffer = new byte[buffersize*5];
+            byte[] bytesBuffer = new byte[512];
             int bytesRead = -1;
             System.out.println(audioStream.getFrameLength()+" " + 289*format.getFrameRate());
             long time1 = System.currentTimeMillis();
+            boolean pause = false;
             while(true) {
                 if(this.messageQ.size() > 0){
-                    long second = (long) (this.messageQ.poll().doubleValue() * audioTime);
+                    while(this.messageQ.size()>0) {
+                        Message message = this.messageQ.poll();
+                        if (message.message == Message.SWITCH) {
+                            pause = !pause;
+                        }
+                        long second = (long) (message.target * audioTime); // round to 1 second
+                        audioLine.drain();
+                        fc.position((long) (second * format.getFrameRate() * format.getFrameSize()));
+                    }
+                }
+                if(pause){
                     audioLine.drain();
-                    fc.position((long)(second * format.getFrameRate() * format.getFrameSize()));
+                 //   Thread.sleep(1000/30); // do not do so much loop
+                   continue;
                 }
                 bytesRead = audioStream.read(bytesBuffer);
                 if (bytesRead == -1) break;
-                Thread.sleep(1000/30); // do not do so much loop
-                //System.out.println(audioLine.getLongFramePosition());
-                if(this.syncQ.size()>0) {
-                    this.syncQ.poll();
-                }
-                this.syncQ.add(audioLine.getLongFramePosition()/ format.getFrameRate());
+                //Thread.sleep(1000/30); // do not do so much loop
                 audioLine.write(bytesBuffer, 0, bytesRead);
-                //System.out.println("Audio: "+ audioLine.getLongFramePosition()/ format.getFrameRate());
             }
             System.out.println(audioStream.getFrameLength()+" " + audioLine.getLongFramePosition());
             System.out.println("audio time using: "+(System.currentTimeMillis() - time1)/1000);
