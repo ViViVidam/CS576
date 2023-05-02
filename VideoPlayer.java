@@ -149,6 +149,11 @@ public class VideoPlayer implements Runnable{
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                if(paused){
+                    pause.setLabel("pause");
+                }
+                else
+                    pause.setLabel("play");
                 videoQ.add(new Message(Message.SWITCH,0));
             }
         });
