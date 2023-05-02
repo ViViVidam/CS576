@@ -19,7 +19,7 @@ public class Indexing {
         ShotDetection shotDetection = new ShotDetection(fps);
         //return KeyframeToScene(shotDetection.ShotSeparationJump(this.filename));
         //return KeyframeToScene(shotDetection.ShotSeparationAvg(this.filename));
-        return KeyframeToScene(shotDetection.shotSeparationRecursive(this.filename,2,8));//3 is equal to 4
+        return KeyframeToScene(shotDetection.shotSeparationRecursive(this.filename,3,8));//3 is equal to 4
     }
 
     public static List<List<Integer>> KeyframeToScene(List<Integer> keyframeIndices) {

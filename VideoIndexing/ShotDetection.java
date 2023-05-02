@@ -121,7 +121,7 @@ public class ShotDetection {
 
             if (!isFirstFrame) {
 
-                if(comparetor.compare(previousFrame,grayFrame)){
+                if(comparetor.compare(grayFrame,previousFrame)){
                     keyframeIndices.add(frameNumber);
                 }
             }

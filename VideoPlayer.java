@@ -76,9 +76,9 @@ public class VideoPlayer implements Runnable{
                     int x = Integer.parseInt(leaf.getUserObject().toString().substring(4));
                     int y = Integer.parseInt(parent.getUserObject().toString().substring(5));
                     int target = arr.get(y-1).get(x-1);
-                    System.out.println(numFrames);
-                    videoQ.add(new Message(Message.JUMP,target / numFrames));
-                    audioQ.add(new Message(Message.JUMP,target / numFrames));
+                    System.out.println(target + " " + numFrames);
+                    videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
+                    audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
             }
         });
@@ -265,6 +265,7 @@ public class VideoPlayer implements Runnable{
                     long eclipse = System.currentTimeMillis() - time1 + bias1 - bias2;
                     double lag = eclipse - i*1000.0/fps;
                     sleepTime -= 1.5 * lag / fps;
+                    sleepTime = Math.max(0,sleepTime);
                 }
             }
             System.out.println("Time using: " + (System.currentTimeMillis() - startime) / 1000);
