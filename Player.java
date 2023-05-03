@@ -1,4 +1,5 @@
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,13 +8,31 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import VideoIndexing.Indexing;
 
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+
 public class Player {
+    static float getTimeLength(String filename){
+        File file = new File(filename);
+        try{
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(file);
+            AudioFormat format = audioStream.getFormat();
+            float temp = audioStream.getFrameLength() / format.getFrameRate();
+            audioStream.close();
+            return temp;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return -1;
+    }
     public static void main(String[] args) {
         String audioFile = "./InputAudio.wav";
         String videoFile = "./InputVideo.rgb";
         //call preIndexing
+        float timeLength = getTimeLength(audioFile);
         List<List<Integer>> arr = null;
-        try {
+        /*try {
             System.out.println("Indexing....");
             Indexing indexer = new Indexing(videoFile,30);
             arr = indexer.runIndexing();
@@ -24,12 +43,14 @@ public class Player {
         if(arr==null){
             System.out.println("not correctly indexed, terminated");
             return;
-        }
-        BlockingQueue<Float> interVA = new ArrayBlockingQueue<Float>(1);
-        BlockingQueue<Double> audioQ = new ArrayBlockingQueue<Double>(100);
-        BlockingQueue<Double> videoQ = new ArrayBlockingQueue<Double>(100);
-        AudioPlayer ap = new AudioPlayer(audioFile,audioQ,interVA);
-        VideoPlayer vp = new VideoPlayer(videoFile,videoQ,audioQ,arr);
+        }*/
+        //System.out.println(arr);
+        BlockingQueue<Message> audioQ = new ArrayBlockingQueue<Message>(100);
+        BlockingQueue<Message> videoQ = new ArrayBlockingQueue<Message>(100);
+        //videoQ.add(new Message(Message.SWITCH,0));
+        //audioQ.add(new Message(Message.SWITCH,0));
+        AudioPlayer ap = new AudioPlayer(audioFile,audioQ);
+        VideoPlayer vp = new VideoPlayer(videoFile,videoQ,audioQ,new ArrayList<>(),timeLength);
         Thread apThread = new Thread(ap);
         Thread vpThread = new Thread(vp);
         //processOne.command("java .\\VideoPlayer.java");
@@ -45,3 +66,4 @@ public class Player {
         }
     }
 }
+

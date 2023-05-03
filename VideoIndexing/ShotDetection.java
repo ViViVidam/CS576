@@ -46,7 +46,7 @@ public class ShotDetection {
 
             BufferedImage previousFrame = null;
             BufferedImage currentFrame = null;
-            beginK = beginK + 8;
+            beginK = beginK * 2;
             index = 0;
             BlockBaseComparetor comparetor = new BlockBaseComparetor(8, beginK, this.GATEVALUE);
             File inputFile = new File(inputRGBFile);
@@ -72,7 +72,6 @@ public class ShotDetection {
                 g.drawImage(currentFrame, 0, 0, null);
                 g.dispose();
                 if (index<candidates.size() && frameNumber == candidates.get(index)) {
-                    //System.out.println(111);
                     index++;
                     if (comparetor.compare(previousFrame, grayFrame)){
                         nextCandidates.add(frameNumber);
@@ -103,7 +102,6 @@ public class ShotDetection {
         BufferedImage currentFrame = null;
         BufferedImage previousFrame = null;
         List<Integer> keyframeIndices = new ArrayList<>();
-        //keyframeIndices.add(0);
         BlockBaseComparetor comparetor = new BlockBaseComparetor(8,16,this.GATEVALUE);
         boolean isFirstFrame = true;
         int frameNumber = -1;
@@ -123,7 +121,7 @@ public class ShotDetection {
 
             if (!isFirstFrame) {
 
-                if(comparetor.compare(previousFrame,grayFrame)){
+                if(comparetor.compare(grayFrame,previousFrame)){
                     keyframeIndices.add(frameNumber);
                 }
             }
