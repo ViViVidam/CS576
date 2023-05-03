@@ -22,7 +22,7 @@ public class VideoPlayer implements Runnable{
     private String filename;
     private int numFrames;
     final private float timeLength;
-    private int fps;
+    private double fps;
     private double checkInterval = 0.5;
     //private int checkIntervalNum;
     private boolean paused;
@@ -76,7 +76,8 @@ public class VideoPlayer implements Runnable{
                     int x = Integer.parseInt(leaf.getUserObject().toString().substring(4));
                     int y = Integer.parseInt(parent.getUserObject().toString().substring(5));
                     int target = arr.get(y-1).get(x-1);
-                    System.out.println(target + " " + numFrames);
+                    //System.out.println(target + " " + numFrames);
+                    //System.out.println(1.0 * target / numFrames);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
@@ -91,9 +92,9 @@ public class VideoPlayer implements Runnable{
         c.gridy = 0;
         frame.getContentPane().add(label,c);
         //progress bar
-        c.fill = GridBagConstraints.NONE;
+        c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.CENTER;
-        //c.weightx = c.weighty = 1;
+//      c.weightx = 1;//c.weighty = 1;
         c.gridheight = 1;
         c.gridx = 1;
         c.gridy = 3;
@@ -194,8 +195,8 @@ public class VideoPlayer implements Runnable{
             numFrames = (int) (raf.length() / pixelPerFrame);
             System.out.println(raf.length() + " number of frames: " + this.numFrames);
             this.fps = Math.round(this.numFrames / this.timeLength);
-            double videoTime = this.numFrames*1.0 / fps;
-            System.out.println("setting fps to " + fps + ", Video time size: " + videoTime);
+            //double videoTime = this.numFrames*1.0 / fps;
+            System.out.println("setting fps to " + fps + ", Video time size: " + this.timeLength);
             FileChannel channel = raf.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(width * height * 3);
             long startime = System.currentTimeMillis();
@@ -222,9 +223,10 @@ public class VideoPlayer implements Runnable{
                             //System.out.println("switch");
                             audioQ.add(new Message(Message.SWITCH, i * 1.0 / numFrames));
                         }else {
-                            long second = (long) (message.target * videoTime);
-                            channel.position(pixelPerFrame * fps * second);
+                            long second = (long) (message.target * this.timeLength);
+                            channel.position(pixelPerFrame * (long) (fps * second));
                             bias1 = second * 1000;
+                            //System.out.println(second);
                             bias2 = 0;
                             if(pausetime!=-1) pausetime = System.currentTimeMillis();
                             time1 = System.currentTimeMillis();

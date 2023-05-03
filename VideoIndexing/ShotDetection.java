@@ -10,7 +10,9 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -35,23 +37,20 @@ public class ShotDetection {
         int numChannels = 3;
         FileInputStream inputStream = null;
         byte[] frameData = new byte[numPixels * numChannels];
-        List<Integer> nextCandidates = ShotSeparationJump(inputRGBFile);
-        //nextCandidates.add(90);
-        //nextCandidates.add(180);
-        //nextCandidates.add(270);
+        List<Integer> nextCandidates = ShotSeparationJump(inputRGBFile,beginK);
         List<Integer> candidates = null;
 
         int index = 0;
-        for (int i = 0; i < loopSize; i++) {
-
-            BufferedImage previousFrame = null;
-            BufferedImage currentFrame = null;
+        for (int i = 0; i < loopSize - 1; i++) {
+            BufferedImage previousFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+            BufferedImage currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
             beginK = beginK * 2;
-            index = 0;
             BlockBaseComparetor comparetor = new BlockBaseComparetor(8, beginK, this.GATEVALUE);
             File inputFile = new File(inputRGBFile);
+            FileChannel fn = null;
             try {
                 inputStream = new FileInputStream(inputFile);
+                fn = inputStream.getChannel();
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -61,7 +60,20 @@ public class ShotDetection {
             nextCandidates = new ArrayList<>();
             System.out.println("list of canidates: " + candidates);
             int frameNumber = 0;
-            while (inputStream.read(frameData) != -1) {
+            for(int j = 0; j < candidates.size(); j++){
+                fn.position((candidates.get(j) - fps) * (long) numPixels * numChannels);
+                inputStream.read(frameData);
+                previousFrame.getRaster().setDataElements(0,0,width,height,frameData);
+                fn.position(candidates.get(j) * (long) numPixels * numChannels);
+                inputStream.read(frameData);
+                currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
+                System.out.println(candidates.get(j));
+                if (comparetor.compare(currentFrame, previousFrame)){
+                    nextCandidates.add(candidates.get(j));
+                }
+            }
+            System.out.println(nextCandidates);
+            /*while (inputStream.read(frameData) != -1) {
                 frameNumber++;
                 if (frameNumber % this.fps != 0) continue;
                 currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -78,12 +90,13 @@ public class ShotDetection {
                     }
                 }
                 previousFrame = grayFrame;
-            }
+            }*/
         }
+        candidates = nextCandidates;
         System.out.println("list of canidates: " + candidates);
         return candidates;
     }
-    public List<Integer> ShotSeparationJump(String inputRGBFile) throws IOException {
+    public List<Integer> ShotSeparationJump(String inputRGBFile,int k) throws IOException {
         File inputFile = new File(inputRGBFile);
         int width = 480;
         int height = 270;
@@ -102,7 +115,7 @@ public class ShotDetection {
         BufferedImage currentFrame = null;
         BufferedImage previousFrame = null;
         List<Integer> keyframeIndices = new ArrayList<>();
-        BlockBaseComparetor comparetor = new BlockBaseComparetor(8,16,this.GATEVALUE);
+        BlockBaseComparetor comparetor = new BlockBaseComparetor(8,k,this.GATEVALUE);
         boolean isFirstFrame = true;
         int frameNumber = -1;
 

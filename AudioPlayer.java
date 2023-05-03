@@ -47,6 +47,7 @@ public class AudioPlayer implements Runnable{
                             pause = !pause;
                         }
                         long second = (long) (message.target * audioTime); // round to 1 second
+                        //System.out.println(second);
                         audioLine.drain();
                         fc.position((long) (second * format.getFrameRate() * format.getFrameSize()));
                     }
