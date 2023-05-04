@@ -8,32 +8,75 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
+
 public class SceneDetection {
     final private int k;
     private final int m;
     private final int blocksize;
     public double GATEVALUE = 3;
-    SceneDetection(int m,int blocksize,int k){
+
+    public SceneDetection(int m, int blocksize, int k) {
         this.k = k;
         this.m = m;
         this.blocksize = blocksize;
     }
 
-    SceneDetection(int m,int blocksize,int k,double gateVal){
+    public SceneDetection(int m, int blocksize, int k, double gateVal) {
         this.k = k;
         this.m = m;
         this.blocksize = blocksize;
         this.GATEVALUE = gateVal;
     }
 
+    public List<Integer> getSceneStartFrames(String filePath) {
+        List<Integer> frames = new ArrayList<>();
+        try {
+            // Start the Python interpreter and run the script through ProcessBuilder
+            ProcessBuilder pb = new ProcessBuilder("python", "Pyscript/SceneDetection.py");
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
 
-    List<Integer> goBackM(String filename, List<Integer> shots) {
+            // Write the input of the Java program to the standard input of the Python program
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+            out.write(filePath);
+            out.newLine();
+            out.flush();
+            out.close();
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            int i = 0;
+            while ((line = in.readLine()) != null) {
+//            System.out.println(line);
+                if (i++ > 0) {
+                    frames.add(Integer.parseInt(line));
+                }
+            }
+            in.close();
+            System.out.println(frames);
+
+            int exitCode = p.waitFor();
+//        System.out.println("Python script finished with exit code " + exitCode);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return frames;
+
+    }
+
+    public List<Integer> goBackM(String filename, List<Integer> shots) {
         ArrayList<Integer> scenes = new ArrayList<>();
         int width = 480;
         int height = 270;
         int numPixels = width * height;
         int numChannels = 3;
-        BlockBaseComparetor comparetor = new BlockBaseComparetor(this.blocksize,this.k,this.GATEVALUE);
+        BlockBaseComparetor comparetor = new BlockBaseComparetor(this.blocksize, this.k, this.GATEVALUE);
         BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         BufferedImage dst = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         byte[] frameData = new byte[numPixels * numChannels];
@@ -46,46 +89,47 @@ public class SceneDetection {
             for (int i = 0; i < shots.size(); i++) {
                 fn.position(shots.get(i) * (long) numChannels * numPixels);
                 inputStream.read(frameData);
-                source.getRaster().setDataElements(0,0,width,height,frameData);
+                source.getRaster().setDataElements(0, 0, width, height, frameData);
                 result.clear();
                 for (int j = 1; j <= m; j++) {
                     if (i - j < 0) break;
-                    fn.position(shots.get(i-j) * (long) numChannels * numPixels);
+                    fn.position(shots.get(i - j) * (long) numChannels * numPixels);
                     inputStream.read(frameData);
-                    dst.getRaster().setDataElements(0,0,width,height,frameData);
-                    result.add(comparetor.compare(source, Arrays.asList(dst)));
+                    dst.getRaster().setDataElements(0, 0, width, height, frameData);
+                    result.add(comparetor.compareFast(source, dst));
                 }
-                int index = getMin(result);
-                if(index==-1){
+                System.out.println(result);
+                int index = getMin(result,this.GATEVALUE);
+                if (index == -1) {
                     scenes.add(0);
-                }
-                else if(result.get(index)>this.GATEVALUE){
+                } else if (result.get(index) > this.GATEVALUE) {
                     scenes.add(i);
-                }
-                else{
+                } else {
                     int j = scenes.size() - 1;
+                    System.out.println(i-index-1);
                     while (scenes.get(j) > i - index - 1) {
                         scenes.remove(j);
                         j--;
                     }
                 }
+                System.out.println(scenes);
             }
             inputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
         ArrayList<Integer> temp = new ArrayList<>();
-        for(int i = 0; i < scenes.size(); i++){
+        for (int i = 0; i < scenes.size(); i++) {
             temp.add(shots.get(scenes.get(i)));
         }
         return temp;
     }
 
-    int getMin(List<Double> l){
-        if(l.size()==0) return -1;
+    int getMin(List<Double> l,double gate) {
+        if (l.size() == 0) return -1;
         int index = 0;
-        for(int i = 1; i < l.size(); i++){
-            if(l.get(index)>l.get(i)){
+        for (int i = l.size()-1; i >= 0; i--) {
+            if (l.get(i) <= gate) {
                 index = i;
             }
         }
