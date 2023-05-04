@@ -27,8 +27,9 @@ public class Player {
         return -1;
     }
     public static void main(String[] args) {
-        String audioFile = "./InputAudio.wav";
-        String videoFile = "./InputVideo.rgb";
+        System.load("D:\\BaiduNetdiskDownload\\opencv\\build\\java\\x64\\opencv_java470.dll");
+        String audioFile = "./The_Great_Gatsby_rgb/InputAudio.wav";
+        String videoFile = "./The_Great_Gatsby_rgb/InputVideo.rgb";
         //call preIndexing
         float timeLength = getTimeLength(audioFile);
         List<List<Integer>> arr = null;

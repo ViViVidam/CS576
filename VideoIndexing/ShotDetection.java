@@ -18,9 +18,9 @@ import java.util.Vector;
 
 public class ShotDetection {
     private int fps;
-    private double GATEVALUE = 2.2;
-    ShotDetection(int fps){
-        this.fps = fps;
+    private double GATEVALUE = 2.5;
+    ShotDetection(int interval){
+        this.fps = interval;
     }
     //fast avg
     private void fastAddImage(BufferedImage source,BufferedImage dst,int cnt){
@@ -45,6 +45,7 @@ public class ShotDetection {
             BufferedImage previousFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
             BufferedImage currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
             beginK = beginK * 2;
+            System.out.println(beginK);
             BlockBaseComparetor comparetor = new BlockBaseComparetor(8, beginK, this.GATEVALUE);
             File inputFile = new File(inputRGBFile);
             FileChannel fn = null;
@@ -68,29 +69,12 @@ public class ShotDetection {
                 inputStream.read(frameData);
                 currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
                 System.out.println(candidates.get(j));
-                if (comparetor.compare(currentFrame, previousFrame)){
+                if (comparetor.compare(currentFrame, Arrays.asList(previousFrame))>this.GATEVALUE){
                     nextCandidates.add(candidates.get(j));
                 }
             }
             System.out.println(nextCandidates);
-            /*while (inputStream.read(frameData) != -1) {
-                frameNumber++;
-                if (frameNumber % this.fps != 0) continue;
-                currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-                currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
 
-                BufferedImage grayFrame = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-                Graphics2D g = grayFrame.createGraphics();
-                g.drawImage(currentFrame, 0, 0, null);
-                g.dispose();
-                if (index<candidates.size() && frameNumber == candidates.get(index)) {
-                    index++;
-                    if (comparetor.compare(previousFrame, grayFrame)){
-                        nextCandidates.add(frameNumber);
-                    }
-                }
-                previousFrame = grayFrame;
-            }*/
         }
         candidates = nextCandidates;
         System.out.println("list of canidates: " + candidates);
@@ -127,14 +111,13 @@ public class ShotDetection {
             currentFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
             currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
 
-            BufferedImage grayFrame = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
+            BufferedImage grayFrame = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
             Graphics2D g = grayFrame.createGraphics();
             g.drawImage(currentFrame, 0, 0, null);
             g.dispose();
 
             if (!isFirstFrame) {
-
-                if(comparetor.compare(grayFrame,previousFrame)){
+                if(comparetor.compareFast(grayFrame,previousFrame)>this.GATEVALUE){
                     keyframeIndices.add(frameNumber);
                 }
             }
@@ -191,7 +174,7 @@ public class ShotDetection {
             }
             else{
                 if(marker[0] && marker[1]){
-                    comparetor.compare(s.get(index),s.get((index+1)%2));
+                    comparetor.compare(s.get(index),Arrays.asList(s.get((index+1)%2)));
                     index = (index + 1) % s.size();
                     marker[index] = false;
                     s.set(index,null);

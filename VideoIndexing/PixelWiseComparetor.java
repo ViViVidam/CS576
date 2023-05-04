@@ -19,10 +19,12 @@ public class PixelWiseComparetor {
                 total += computeDistanceRGB(pixela,pixelb);
             }
         }
+       // System.out.println("result: "+Math.sqrt(total)/(height*width));
         return (Math.sqrt(total)/(height*width)) > threhold;
     }
 
     static double computeDistanceRGB(int p1, int p2){
+        System.out.println(p1+" " + p2);
         double total = 0;
         for(int i = 0; i < 3; i++) {
             total += (p1&0xff - p2&0xff) * (p1&0xff - p2&0xff);
