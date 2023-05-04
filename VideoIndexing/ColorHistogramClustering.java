@@ -13,14 +13,17 @@ import javax.imageio.ImageIO;
 public class ColorHistogramClustering {
     private static int bins = 256;
     //    private int threshold = 18000;
-    private int threshold = 110;
+    private int threshold = 1200;
+    private int count = 1;
+    private int factor = 3;
+    private int mainDistanceThreshold = 1000;
+    private double mainDistanceFactor = 1.5;
 
     public List<List<Integer>> clusterFrames(List<BufferedImage> frames) {
         List<List<Integer>> clusters = new ArrayList<>();
         List<Integer> currentCluster = new ArrayList<>();
         currentCluster.add(0);
 
-        double preDistance = 0;
         for (int i = 1; i < frames.size(); i++) {
             BufferedImage currentFrame = frames.get(i);
             BufferedImage lastFrame = frames.get(currentCluster.get(currentCluster.size() - 1));
@@ -29,8 +32,7 @@ public class ColorHistogramClustering {
 //                lastCluster.add(frames.get(currentCluster.get(j)));
 //            }
             double distance = calculateChiSquaredDistance(currentFrame, lastFrame);
-            if (i == 1) preDistance = distance;
-//            System.out.println("frame" + (i - 1) + " to " + (i) + ":  " + (int)distance);
+            System.out.println("frame" + (i - 1) + " to " + (i) + ":  " + (int) distance);
 //            System.out.println((int)distance);
 //            matrix+= (int)distance + ",";
 //            index += i + ",";
@@ -59,14 +61,14 @@ public class ColorHistogramClustering {
 //            } else {
 //                currentCluster.add(i);
 //            }
-            if (Math.abs(distance - preDistance) >= threshold) {
+            if (distance >= threshold) {
                 clusters.add(currentCluster.subList(0, 1));
                 currentCluster = new ArrayList<>();
                 currentCluster.add(i);
             } else {
                 currentCluster.add(i);
             }
-            preDistance = distance;
+            count++;
         }
         return clusters;
     }
@@ -79,7 +81,12 @@ public class ColorHistogramClustering {
 
         double distance = 0;
         for (int i = 0; i < bins * 3; i++) {
-            double diff = (double) (hist1[i] - hist2[i]);
+            double diff = (double) (hist1[i] - hist2[i]) * factor;
+            if (i == bins * 0 || i == bins * 1 || i == bins * 2) {
+
+                diff = diff / factor;
+            }
+
             distance += diff * diff;
         }
 
@@ -87,19 +94,39 @@ public class ColorHistogramClustering {
     }
 
     private double calculateChiSquaredDistance(BufferedImage img1, BufferedImage img2) {
+        String matrix1 = "";
+        String matrix2 = "";
+        String index1 = "";
         int[] hist1 = calculateColorHistogram(img1);
         int[] hist2 = calculateColorHistogram(img2);
+
+        for (int i = 0; i < hist1.length; i++) {
+            matrix1 += hist1[i] + ",";
+            matrix2 += hist2[i] + ",";
+            index1 += i + ",";
+        }
+        if (count == 17) {
+            System.out.println(matrix1);
+            System.out.println(matrix2);
+            System.out.println(index1);
+        }
 
 
         double distance = 0.0;
         for (int i = 0; i < hist1.length; i++) {
-            double diff = hist1[i] - hist2[i];
+            double diff = (hist1[i] - hist2[i]) * factor;
+            if (i == bins * 0 || i == bins * 1 || i == bins * 2) {
+                diff = diff / factor;
+            }
             double sum = hist1[i] + hist2[i];
             if (sum != 0) {
                 distance += (diff * diff) / sum;
             }
         }
-
+        double mainDistance = (double) Math.abs(hist1[bins * 0] - hist2[bins * 0]) + Math.abs(hist1[bins * 1] - hist2[bins * 1]) + Math.abs(hist1[bins * 2] - hist2[bins * 2]);
+        if (mainDistance < mainDistanceThreshold) {
+            distance = distance / mainDistanceFactor;
+        }
         return distance / hist1.length;
     }
 
@@ -145,8 +172,9 @@ public class ColorHistogramClustering {
     }
 
     public static void main(String[] args) throws IOException {
-        List<Integer> shots = new ArrayList<Integer>(Arrays.asList(165, 420, 1080, 1140, 1365, 1980, 2175, 2190, 2340, 2460, 2595, 2730, 3150, 3255, 3285, 3315, 3390, 3555, 3570, 3585, 3630, 3645, 3660, 3675, 3690, 3735, 3780, 3795, 3810, 3825, 3840, 3855, 3885, 3915, 3930, 3945, 3960, 3975, 4005, 4035, 4080, 4095, 4110, 4125, 4140, 4500, 4635, 4845, 4875, 4890, 4905, 4920, 4935, 4950, 4965, 5025, 5340, 5445, 5460, 5475, 5490, 5505, 5520, 5535, 5550, 5565, 5580, 5595, 5865, 5880, 5955, 6150, 6195, 6210, 6225, 6240, 6255, 6270, 6285, 6300, 6315, 6330, 6405, 6420, 6465, 6480, 6495, 6525, 6570, 6585, 6600, 6690, 6870, 6885, 6900, 6915, 6930, 6945, 6975, 7050, 7305, 7470, 7605, 7620, 7755, 7860, 8025, 8100, 8160, 8220, 8280, 8295, 8325, 8370, 8460, 8520));
-//        for(int i=0;i<shots.size();i++){
+//        List<Integer> shots = new ArrayList<Integer>(Arrays.asList(165, 420, 1080, 1140, 1365, 1980, 2175, 2190, 2340, 2460, 2595, 2730, 3150, 3255, 3285, 3315, 3390, 3555, 3570, 3585, 3630, 3645, 3660, 3675, 3690, 3735, 3780, 3795, 3810, 3825, 3840, 3855, 3885, 3915, 3930, 3945, 3960, 3975, 4005, 4035, 4080, 4095, 4110, 4125, 4140, 4500, 4635, 4845, 4875, 4890, 4905, 4920, 4935, 4950, 4965, 5025, 5340, 5445, 5460, 5475, 5490, 5505, 5520, 5535, 5550, 5565, 5580, 5595, 5865, 5880, 5955, 6150, 6195, 6210, 6225, 6240, 6255, 6270, 6285, 6300, 6315, 6330, 6405, 6420, 6465, 6480, 6495, 6525, 6570, 6585, 6600, 6690, 6870, 6885, 6900, 6915, 6930, 6945, 6975, 7050, 7305, 7470, 7605, 7620, 7755, 7860, 8025, 8100, 8160, 8220, 8280, 8295, 8325, 8370, 8460, 8520));
+        List<Integer> shots = new ArrayList<Integer>(Arrays.asList(1005, 1470, 1485, 1500, 1515, 1530, 1545, 1560, 1575, 1590, 1605, 1620, 1635, 1650, 1665, 1680, 1845, 1905, 2730, 2820, 3720, 4050, 4065, 4080, 4095, 4155, 4170, 4335, 4365, 4395, 4410, 4440, 4560, 4620, 4650, 4725, 4815, 4830, 4920, 4935, 5010, 5040, 5085, 5100, 5220, 5235, 5250, 5295, 5310, 5325, 5385, 5535));
+//                for(int i=0;i<shots.size();i++){
 //            System.out.println(i+" "+(double)(shots.get(i)/30.0));
 //        }
         List<BufferedImage> frames = new ArrayList<>();
@@ -183,15 +211,19 @@ public class ColorHistogramClustering {
         //cluster frames
         ColorHistogramClustering clustering = new ColorHistogramClustering();
         List<List<Integer>> clusters = clustering.clusterFrames(frames);
-
-        List<Integer> output = new ArrayList<>();
+        System.out.println("Number of clusters: " + clusters.size());
         for (int i = 0; i < clusters.size(); i++) {
-            output.add(shots.get(clusters.get(i).get(0)));
+            System.out.println("Cluster " + i + ": " + clusters.get(i));
         }
-        System.out.println("Scene " + 0 + " starts at frame " + 0);
-        for (int i = 0; i < output.size(); i++) {
-            System.out.println("Scene " + (i + 1) + " starts at frame " + output.get(i));
-        }
+
+//        List<Integer> output = new ArrayList<>();
+//        for (int i = 0; i < clusters.size(); i++) {
+//            output.add(shots.get(clusters.get(i).get(0)));
+//        }
+//        System.out.println("Scene " + 0 + " starts at frame " + 0);
+//        for (int i = 0; i < output.size(); i++) {
+//            System.out.println("Scene " + (i + 1) + " starts at frame " + output.get(i));
+//        }
     }
     //    static class Cluster {
 //

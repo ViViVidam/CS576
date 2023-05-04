@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import VideoIndexing.Indexing;
+import VideoIndexing.SceneDetection;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -26,12 +27,15 @@ public class Player {
         }
         return -1;
     }
-    public static void main(String[] args) {
+    public static void main(String[] args)  {
         String audioFile = "./InputAudio.wav";
         String videoFile = "./InputVideo.rgb";
+        // 需要用绝对路径？
+        String videoMP4File = "./InputVideo.mp4";
         //call preIndexing
         float timeLength = getTimeLength(audioFile);
         List<List<Integer>> arr = null;
+        List<Integer> sceneList = SceneDetection.getSceneStartFrames(videoMP4File);
         /*try {
             System.out.println("Indexing....");
             Indexing indexer = new Indexing(videoFile,30);
