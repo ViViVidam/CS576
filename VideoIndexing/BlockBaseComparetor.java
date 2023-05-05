@@ -22,6 +22,11 @@ public class BlockBaseComparetor {
     private int blocksize = 8;
     private int k = 8;
     private double threshold = 255/10;
+    BlockBaseComparetor(int blocksize,int k){
+        this.k = k;
+        this.blocksize = blocksize;
+        seconds = 0;
+    }
     BlockBaseComparetor(int blocksize,int k,double threshold){
         this.k = k;
         this.blocksize = blocksize;
@@ -30,12 +35,27 @@ public class BlockBaseComparetor {
     }
     public double compareFast(BufferedImage source, BufferedImage target) {
         BlockingQueue<Result> res = new ArrayBlockingQueue<>(6);
+        int[] tmp = new int[3];
+        for(int i = 0; i < source.getWidth(); i++){
+            for(int j = 0; j < source.getHeight();j++){
+                int r = (source.getRGB(i,j) >> 16) & 0xff;
+                int g = (source.getRGB(i,j) >> 8) & 0xff;
+                int b = source.getRGB(i,j) & 0xff;
+                ColorTransformer.rgb2luv(r,g,b,tmp);
+                source.setRGB(i,j,(tmp[0]<<16)|(tmp[1]<<8)|tmp[2]);
+                r = (target.getRGB(i,j) >> 16) & 0xff;
+                g = (target.getRGB(i,j) >> 8) & 0xff;
+                b = target.getRGB(i,j) & 0xff;
+                ColorTransformer.rgb2luv(r,g,b,tmp);
+                target.setRGB(i,j,(tmp[0]<<16)|(tmp[1]<<8)|tmp[2]);
+            }
+        }
         int totalWBlock = source.getWidth() / this.blocksize + source.getWidth() % this.blocksize;
         int totalHBlock = source.getHeight() / this.blocksize + source.getHeight() % this.blocksize;
         ChildComparetor cc1 = new ChildComparetor(this.blocksize,this.k,0,(int)totalWBlock/2*this.blocksize,0,(int)totalHBlock/2*this.blocksize,source,target,res);
-        ChildComparetor cc2 = new ChildComparetor(this.blocksize,this.k,(int)(totalWBlock/2)*this.blocksize+1,source.getWidth(),0,(int)totalHBlock/2*this.blocksize,source,target,res);
-        ChildComparetor cc3 = new ChildComparetor(this.blocksize,this.k,0,(int)totalWBlock/2*this.blocksize,(int)(totalHBlock/2)*this.blocksize+1,source.getHeight(),source,target,res);
-        ChildComparetor cc4 = new ChildComparetor(this.blocksize,this.k,(int)(totalWBlock/2)*this.blocksize+1,source.getWidth(),(int)(totalHBlock/2)*this.blocksize+1,source.getHeight(),source,target,res);
+        ChildComparetor cc2 = new ChildComparetor(this.blocksize,this.k,(int)(totalWBlock/2)*this.blocksize,source.getWidth(),0,(int)totalHBlock/2*this.blocksize,source,target,res);
+        ChildComparetor cc3 = new ChildComparetor(this.blocksize,this.k,0,(int)totalWBlock/2*this.blocksize,(int)(totalHBlock/2)*this.blocksize,source.getHeight(),source,target,res);
+        ChildComparetor cc4 = new ChildComparetor(this.blocksize,this.k,(int)(totalWBlock/2)*this.blocksize,source.getWidth(),(int)(totalHBlock/2)*this.blocksize,source.getHeight(),source,target,res);
         Thread thread1 = new Thread(cc1);
         Thread thread2 = new Thread(cc2);
         Thread thread3 = new Thread(cc3);
@@ -58,7 +78,7 @@ public class BlockBaseComparetor {
             diff+=res.poll().loss;
             cnt+=res.poll().cnt;
         }
-        //System.out.println(diff/cnt);
+        System.out.println(diff/cnt);
         return diff/cnt;
     }
 
@@ -116,13 +136,15 @@ public class BlockBaseComparetor {
     static double computeDistanceRGB(int p1, int p2){
 
         double total = 0;
-        for(int i = 0; i < 3; i++) {
+
+        for(int i = 0; i < 2; i++) {
             total += (p1&0xff - p2&0xff) * (p1&0xff - p2&0xff);
             p1 = p1 >> 8;
             p2 = p2 >> 8;
         }
-
-        return total / 3.0;
+        total = 0.3*Math.sqrt(total);
+        total += 0.7*Math.abs(p1&0xff - p2&0xff);
+        return total;
     }
 }
 
@@ -184,19 +206,22 @@ class ChildComparetor implements Runnable{
                 }
             }
         }
-        if(cnt>0) return Math.sqrt(diff)/cnt;
+        if(cnt>0) return diff/cnt;
         //System.out.println(targetX+" "+targetY);
         return 0;
     }
 
     static double computeDistanceRGB(int p1, int p2){
         double total = 0;
-        for(int i = 0; i < 3; i++) {
+
+        for(int i = 0; i < 2; i++) {
             total += (p1&0xff - p2&0xff) * (p1&0xff - p2&0xff);
             p1 = p1 >> 8;
             p2 = p2 >> 8;
         }
-        return total / 3.0;
+        total = 0.5*Math.sqrt(total);
+        total += 0.5*Math.abs(p1&0xff - p2&0xff);
+        return total;
     }
 }
 class Result{

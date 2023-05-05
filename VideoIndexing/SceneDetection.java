@@ -17,7 +17,7 @@ public class SceneDetection {
     final private int k;
     private final int m;
     private final int blocksize;
-    public double GATEVALUE = 3;
+    public double GATEVALUE = 40;
 
     public SceneDetection(int m, int blocksize, int k) {
         this.k = k;
@@ -71,7 +71,7 @@ public class SceneDetection {
     }
 
     public List<Integer> goBackM(String filename, List<Integer> shots) {
-        ArrayList<Integer> scenes = new ArrayList<>();
+        ArrayList<Integer> scenes = new ArrayList<>(shots.size());
         int width = 480;
         int height = 270;
         int numPixels = width * height;
@@ -99,14 +99,13 @@ public class SceneDetection {
                     result.add(comparetor.compareFast(source, dst));
                 }
                 System.out.println(result);
-                int index = getMin(result,this.GATEVALUE);
+                int index = getMin(result);
                 if (index == -1) {
                     scenes.add(0);
                 } else if (result.get(index) > this.GATEVALUE) {
                     scenes.add(i);
                 } else {
                     int j = scenes.size() - 1;
-                    System.out.println(i-index-1);
                     while (scenes.get(j) > i - index - 1) {
                         scenes.remove(j);
                         j--;
@@ -115,6 +114,7 @@ public class SceneDetection {
                 System.out.println(scenes);
             }
             inputStream.close();
+            fn.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -125,12 +125,12 @@ public class SceneDetection {
         return temp;
     }
 
-    int getMin(List<Double> l,double gate) {
+    int getMin(List<Double> l) {
         if (l.size() == 0) return -1;
         int index = 0;
         for (int i = l.size()-1; i >= 0; i--) {
-            if (l.get(i) <= gate) {
-                index = i;
+            if (l.get(i) < l.get(index)) {
+                index =  i;
             }
         }
         return index;

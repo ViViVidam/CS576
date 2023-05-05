@@ -3,10 +3,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import VideoIndexing.Indexing;
+import VideoIndexing.Nodes;
 import VideoIndexing.SceneDetection;
 
 import javax.sound.sampled.AudioFormat;
@@ -29,22 +29,17 @@ public class Player {
     }
 
     public static void main(String[] args) {
+        System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         System.load("D:\\BaiduNetdiskDownload\\opencv\\build\\java\\x64\\opencv_java470.dll");
-        String audioFile = "./InputAudio.wav";
-        String videoFile = "./InputVideo.rgb";
+        String audioFile = "./The_Great_Gatsby_rgb/InputAudio.wav";
+        String videoFile = "./The_Great_Gatsby_rgb/InputVideo.rgb";
         //call preIndexing
         float timeLength = getTimeLength(audioFile);
-        List<List<Integer>> arr = null;
-
-
-        String videoMP4File = "D:\\academic\\codes\\Ready_Player_One_rgb\\InputVideo.mp4";
-        SceneDetection sd = new SceneDetection(3,8,32);
-        List<Integer> sceneList = sd.getSceneStartFrames(videoMP4File);
-        sceneList = sd.goBackM(videoFile,sceneList);
-        System.out.println(sceneList);
+        List<Nodes> arr = null;
+        String videoMP4File = "D:\\academic\\codes\\Ready_Player_One_rgb\\The_Great_Gatsby_rgb\\InputVideo.mp4";
         try {
             System.out.println("Indexing....");
-            Indexing indexer = new Indexing(videoFile, 30);
+            Indexing indexer = new Indexing(videoFile, videoMP4File,30);
             arr = indexer.runIndexing();
 
         } catch (IOException e) {
