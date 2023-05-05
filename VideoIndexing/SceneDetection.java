@@ -103,10 +103,11 @@ public class SceneDetection {
                     sc.setRefImage(source);
                     result.add(sc.compareTo(dst));
                 }
-                int index = getMin(result);
+                System.out.println(result);
+                int index = getMax(result);
                 if (index == -1) {
                     scenes.add(0);
-                } else if (result.get(index) < 0.5) {
+                } else if (result.get(index) < 0.4) {
                     scenes.add(i);
                 } else {
                     int j = scenes.size() - 1;

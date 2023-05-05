@@ -241,7 +241,7 @@ public class VideoPlayer implements Runnable {
                             indexX++;
                         }
                     }
-                    System.out.println(indexX+" "+indexY+" "+indexZ);
+                    //System.out.println(indexX+" "+indexY+" "+indexZ);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
@@ -252,13 +252,13 @@ public class VideoPlayer implements Runnable {
                     int y = Integer.parseInt(((DefaultMutableTreeNode)node.getParent()).getUserObject().toString().substring(4));
                     int x = Integer.parseInt(((DefaultMutableTreeNode)node.getParent().getParent()).getUserObject().toString().substring(5));
                     int target = arr.get(x - 1).getChild(y - 1).getChild(z-1).getVal();
-                    System.out.println(target + " " + numFrames);
+                    //System.out.println(target + " " + numFrames);
                     indexX = curX = x - 1;
                     indexY = curY = y - 1;
                     indexZ = curZ = z - 1;
                     indexZ++;
-                    System.out.println(indexY);
-                    System.out.println(arr.get(indexX).getChildrenCount());
+                    //System.out.println(indexY);
+                    //System.out.println(arr.get(indexX).getChildrenCount());
                     if(arr.get(indexX).getChild(indexY).getChildrenCount()<=indexZ) {
                         indexZ = 0;
                         indexY++;
@@ -267,7 +267,7 @@ public class VideoPlayer implements Runnable {
                             indexX++;
                         }
                     }
-                    System.out.println(indexX+" "+indexY+" "+indexZ);
+                    //System.out.println(indexX+" "+indexY+" "+indexZ);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
@@ -285,7 +285,7 @@ public class VideoPlayer implements Runnable {
             //double videoTime = this.numFrames*1.0 / fps;
             System.out.println("setting fps to " + fps + ", Video time size: " + this.timeLength);
             FileChannel channel = raf.getChannel();
-            ByteBuffer buffer = ByteBuffer.allocate(width * height * 3);
+            byte[] buffer = new byte[width * height * 3];
             long startime = System.currentTimeMillis();
             long time1;
             long bias1 = 0;// count for jump time
@@ -359,7 +359,7 @@ public class VideoPlayer implements Runnable {
                         }
                     }
                     else if(indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal()<i) {
-                        System.out.println("if: "+indexX+" "+indexY+" "+indexZ);
+                       // System.out.println("if: "+indexX+" "+indexY+" "+indexZ);
                         while (indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal() < i) {
                             curX = indexX;
                             curY = indexY;
@@ -373,7 +373,7 @@ public class VideoPlayer implements Runnable {
                                     indexY = 0;
                                 }
                             }
-                            System.out.println("loop: "+indexX+" "+indexY+" "+indexZ);
+                            //System.out.println("loop: "+indexX+" "+indexY+" "+indexZ);
                         }
                         if (arr.get(curX).getChild(curY).getChildrenCount() == 1) {
                             tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(curX), rootNode.getChildAt(curX).getChildAt(curY)}));
@@ -388,12 +388,12 @@ public class VideoPlayer implements Runnable {
                     i--;
                     continue;
                 }
-                buffer.clear();
-                channel.read(buffer);
-                buffer.rewind();
-                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-                for (int y = 0; y < height; y++) {
+                //buffer.clear();
+                channel.read(ByteBuffer.wrap(buffer));
+                //buffer.rewind();
+                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+                image.getRaster().setDataElements(0,0,width,height,buffer);
+                /*for (int y = 0; y < height; y++) {
                     for (int x = 0; x < width; x++) {
                         int r = buffer.get() & 0xff;
                         int g = buffer.get() & 0xff;
@@ -401,7 +401,7 @@ public class VideoPlayer implements Runnable {
                         int rgb = (r << 16) | (g << 8) | b;
                         image.setRGB(x, y, rgb);
                     }
-                }
+                }*/
                 label.setIcon(new ImageIcon(image));
                 progressBar.setValue(100 * i / numFrames);
                 frame.validate();
@@ -414,7 +414,7 @@ public class VideoPlayer implements Runnable {
                 if (i % fps == 0 && !jumped) {
                     long eclipse = System.currentTimeMillis() - time1 + bias1 - bias2;
                     double lag = eclipse - i * 1000.0 / fps;
-                    sleepTime -= 1.5 * lag / fps;
+                    sleepTime -= 0.8 * lag / fps;
                     sleepTime = Math.max(0, sleepTime);
                 }
             }
