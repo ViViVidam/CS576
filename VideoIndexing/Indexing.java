@@ -44,6 +44,7 @@ public class Indexing {
                 while(indexP < shots.size()) {
                     Nodes tempP = new Nodes(shots.get(indexP));
                     indexP++;
+                    tempF.add(tempP);
                     if(indexP == shots.size()){
                         while(i < subshots.size()) {
                             tempP.add(new Nodes(subshots.get(i)));
@@ -55,13 +56,13 @@ public class Indexing {
                         tempP.add(new Nodes(subshots.get(i)));
                         i++;
                     }
-                    tempF.add(tempP);
                 }
                 continue;
             }
             while(indexP < shots.size() && shots.get(indexP) < scenes.get(indexF)){
                 Nodes tempP = new Nodes(shots.get(indexP));
                 indexP++;
+                tempF.add(tempP);
                 if(indexP == shots.size()){
                     while(i < subshots.size()) {
                         tempP.add(new Nodes(subshots.get(i)));
@@ -73,7 +74,6 @@ public class Indexing {
                     tempP.add(new Nodes(subshots.get(i)));
                     i++;
                 }
-                tempF.add(tempP);
             }
 
         }

@@ -5,6 +5,8 @@ package VideoIndexing;
 //import org.opencv.imgcodecs.*;
 //import org.opencv.videoio.VideoCapture;
 
+import jssim.SsimCalculator;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -206,9 +208,11 @@ public class ShotDetection {
 
         byte[] frameData = new byte[numPixels * numChannels];
         BlockBaseComparetor comparetor = new BlockBaseComparetor(8, k);
+        SsimCalculator sc = new SsimCalculator();
         shots.add((int) raf.length()/(numChannels*numPixels));
         raf.close();
         try {
+
             inputStream = new FileInputStream(inputFile);
             fn = inputStream.getChannel();
         } catch (IOException e) {
@@ -220,15 +224,26 @@ public class ShotDetection {
             if (((shots.get(i) - shots.get(i - 1)) / fps) > INTERVAL) {
                 System.out.println(shots.get(i)+" "+shots.get(i-1));
 
-                for (int j = shots.get(i - 1); j < shots.get(i); j+=15) {
+                for (int j = shots.get(i - 1); j < shots.get(i); j++) {
                     fn.position(j * (long) numPixels * numChannels);
                     inputStream.read(frameData);
                     currentFrame.getRaster().setDataElements(0, 0, width, height, frameData);
                     if (previousFrame != null) {
-                        if (comparetor.compareFast(currentFrame, previousFrame) > this.GATEVALUE) {
+                        sc.setRefImage(currentFrame);
+                        try {
+                            double res = sc.compareTo(previousFrame);
+                            //System.out.println("ssim: "+res);
+                            if(res<0.7){
+                                if((int)(j/fps) == (int)(returnVal.get(returnVal.size()-1)/fps)) continue;
+                                returnVal.add(j);
+                            }
+                        }catch (Exception e){
+                            e.printStackTrace();
+                        }
+                        /*if (comparetor.compareFast(currentFrame, previousFrame) > this.GATEVALUE) {
                             if((int)(j/fps) == (int)(returnVal.get(returnVal.size()-1)/fps)) continue;
                             returnVal.add(j);
-                        }
+                        }*/
                     }
                     previousFrame = new BufferedImage(width,height,BufferedImage.TYPE_3BYTE_BGR);
                     previousFrame.createGraphics().drawImage(currentFrame,0,0,null);

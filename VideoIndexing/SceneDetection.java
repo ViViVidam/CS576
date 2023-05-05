@@ -1,5 +1,7 @@
 package VideoIndexing;
 
+import jssim.SsimCalculator;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,6 +79,7 @@ public class SceneDetection {
         int numPixels = width * height;
         int numChannels = 3;
         BlockBaseComparetor comparetor = new BlockBaseComparetor(this.blocksize, this.k, this.GATEVALUE);
+        SsimCalculator sc = new SsimCalculator();
         BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         BufferedImage dst = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         byte[] frameData = new byte[numPixels * numChannels];
@@ -96,13 +99,14 @@ public class SceneDetection {
                     fn.position(shots.get(i - j) * (long) numChannels * numPixels);
                     inputStream.read(frameData);
                     dst.getRaster().setDataElements(0, 0, width, height, frameData);
-                    result.add(comparetor.compareFast(source, dst));
+                    //result.add(comparetor.compareFast(source, dst));
+                    sc.setRefImage(source);
+                    result.add(sc.compareTo(dst));
                 }
-                System.out.println(result);
                 int index = getMin(result);
                 if (index == -1) {
                     scenes.add(0);
-                } else if (result.get(index) > this.GATEVALUE) {
+                } else if (result.get(index) < 0.5) {
                     scenes.add(i);
                 } else {
                     int j = scenes.size() - 1;
@@ -130,6 +134,16 @@ public class SceneDetection {
         int index = 0;
         for (int i = l.size()-1; i >= 0; i--) {
             if (l.get(i) < l.get(index)) {
+                index =  i;
+            }
+        }
+        return index;
+    }
+    int getMax(List<Double> l) {
+        if (l.size() == 0) return -1;
+        int index = 0;
+        for (int i = l.size()-1; i >= 0; i--) {
+            if (l.get(i) > l.get(index)) {
                 index =  i;
             }
         }

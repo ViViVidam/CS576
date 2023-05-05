@@ -1,4 +1,5 @@
 import VideoIndexing.Nodes;
+import VideoIndexing.ShotDetection;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Semaphore;
 
 // using BlockQueue
 public class VideoPlayer implements Runnable {
@@ -35,6 +37,7 @@ public class VideoPlayer implements Runnable {
     private int curX;
     private int curY;
     private int curZ;
+    final private Semaphore semp = new Semaphore(1);
     public VideoPlayer(String filename, BlockingQueue<Message> queueVideo, BlockingQueue<Message> queueAudio, List<Nodes> arr, float timeLength) {
         this.filename = filename;
         this.videoQ = queueVideo;
@@ -53,7 +56,6 @@ public class VideoPlayer implements Runnable {
         // create the JFrame and JLabel to display the video
         JFrame frame = new JFrame("Video Display");
         JProgressBar progressBar = new JProgressBar(0, 100);
-
         frame.getContentPane().setLayout(new GridBagLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(new Dimension(width, height));
@@ -210,11 +212,17 @@ public class VideoPlayer implements Runnable {
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
+
                 super.mouseClicked(e);
                 TreePath path = tree.getPathForLocation(e.getX(), e.getY());
                 if(path==null) return; // no clicking the actual box;
                 TreeNode node = (TreeNode) path.getLastPathComponent();
                 if (path == null) return;
+                try {
+                    semp.acquire();
+                }catch (Exception ee){
+                    ee.printStackTrace();
+                }
                 if (path.getPathCount() == 3) {
                     DefaultMutableTreeNode leaf = (DefaultMutableTreeNode) path.getLastPathComponent();
                     DefaultMutableTreeNode parent = (DefaultMutableTreeNode) path.getPathComponent(1);
@@ -233,6 +241,7 @@ public class VideoPlayer implements Runnable {
                             indexX++;
                         }
                     }
+                    System.out.println(indexX+" "+indexY+" "+indexZ);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
@@ -262,6 +271,7 @@ public class VideoPlayer implements Runnable {
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
+                semp.release();
             }
         });
 
@@ -320,8 +330,11 @@ public class VideoPlayer implements Runnable {
 
                     }
                     // highlight
-
-
+                    try {
+                        this.semp.acquire();
+                    }catch (Exception ee){
+                        ee.printStackTrace();
+                    }
                     if(curX < arr.size() && arr.get(curX).getChild(curY).getChild(curZ).getVal()>i){
                         while (arr.get(curX).getChild(curY).getChild(curZ).getVal()>i){
                             indexY = curY;
@@ -346,6 +359,7 @@ public class VideoPlayer implements Runnable {
                         }
                     }
                     else if(indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal()<i) {
+                        System.out.println("if: "+indexX+" "+indexY+" "+indexZ);
                         while (indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal() < i) {
                             curX = indexX;
                             curY = indexY;
@@ -359,14 +373,15 @@ public class VideoPlayer implements Runnable {
                                     indexY = 0;
                                 }
                             }
+                            System.out.println("loop: "+indexX+" "+indexY+" "+indexZ);
                         }
                         if (arr.get(curX).getChild(curY).getChildrenCount() == 1) {
                             tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(curX), rootNode.getChildAt(curX).getChildAt(curY)}));
                         } else {
                             tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(curX), rootNode.getChildAt(curX).getChildAt(curY), rootNode.getChildAt(curX).getChildAt(curY).getChildAt(curZ)}));
                         }
-
                     }
+                    semp.release();
                     if (paused && jumped) i--;
                 }
                 if (paused && !jumped) {
