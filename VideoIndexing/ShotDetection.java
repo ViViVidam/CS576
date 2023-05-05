@@ -1,9 +1,5 @@
 package VideoIndexing;
-//import org.opencv.core.*;
-//import org.opencv.imgproc.Imgproc;
-//import org.opencv.video.*;
-//import org.opencv.imgcodecs.*;
-//import org.opencv.videoio.VideoCapture;
+
 
 import jssim.SsimCalculator;
 

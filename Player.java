@@ -29,8 +29,8 @@ public class Player {
     }
 
     public static void main(String[] args) {
-        System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
-        System.load("D:\\BaiduNetdiskDownload\\opencv\\build\\java\\x64\\opencv_java470.dll");
+        //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
+        //System.load("D:\\BaiduNetdiskDownload\\opencv\\build\\java\\x64\\opencv_java470.dll");
         String audioFile = "./The_Great_Gatsby_rgb/InputAudio.wav";
         String videoFile = "./The_Great_Gatsby_rgb/InputVideo.rgb";
         //call preIndexing
