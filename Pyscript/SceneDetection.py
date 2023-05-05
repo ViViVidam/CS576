@@ -1,6 +1,6 @@
 from scenedetect.video_manager import VideoManager
 from scenedetect.scene_manager import SceneManager
-from scenedetect.detectors import ContentDetector
+from scenedetect.detectors import ContentDetector, AdaptiveDetector
 
 # create a VideoManager object to open and read video files(better use absolute file path?)
 filePath = input()
@@ -9,8 +9,8 @@ video_manager.set_downscale_factor(2)
 
 # create a SceneManager object to manage scenes
 scene_manager = SceneManager()
-scene_manager.add_detector(ContentDetector())
-
+#scene_manager.add_detector(ContentDetector())
+scene_manager.add_detector(AdaptiveDetector())
 # initialize the video manager and start processing the video
 video_manager.start()
 scene_manager.detect_scenes(frame_source=video_manager)
