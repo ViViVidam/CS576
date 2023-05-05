@@ -17,19 +17,16 @@ import java.util.List;
 
 public class SceneDetection {
     final private int k;
-    private final int m;
     private final int blocksize;
     public double GATEVALUE = 40;
 
-    public SceneDetection(int m, int blocksize, int k) {
+    public SceneDetection(int blocksize, int k) {
         this.k = k;
-        this.m = m;
         this.blocksize = blocksize;
     }
 
-    public SceneDetection(int m, int blocksize, int k, double gateVal) {
+    public SceneDetection(int blocksize, int k, double gateVal) {
         this.k = k;
-        this.m = m;
         this.blocksize = blocksize;
         this.GATEVALUE = gateVal;
     }
@@ -72,13 +69,14 @@ public class SceneDetection {
 
     }
 
-    public List<Integer> goBackM(String filename, List<Integer> shots) {
+    public List<Integer> goBackM(int m,String filename, List<Integer> shots) {
         ArrayList<Integer> scenes = new ArrayList<>(shots.size());
         int width = 480;
         int height = 270;
         int numPixels = width * height;
         int numChannels = 3;
-        BlockBaseComparetor comparetor = new BlockBaseComparetor(this.blocksize, this.k, this.GATEVALUE);
+        //BlockBaseComparetor comparetor = new BlockBaseComparetor(this.blocksize, this.k, this.GATEVALUE);
+        ColorHistogramClustering chc = new ColorHistogramClustering();
         SsimCalculator sc = new SsimCalculator();
         BufferedImage source = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
         BufferedImage dst = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
@@ -100,14 +98,15 @@ public class SceneDetection {
                     inputStream.read(frameData);
                     dst.getRaster().setDataElements(0, 0, width, height, frameData);
                     //result.add(comparetor.compareFast(source, dst));
-                    sc.setRefImage(source);
-                    result.add(sc.compareTo(dst));
+                    //sc.setRefImage(source);
+                    //result.add(sc.compareTo(dst));
+                    result.add(chc.calculateChiSquaredDistance(source,dst));
                 }
                 System.out.println(result);
-                int index = getMax(result);
+                int index = getMin(result,1200);
                 if (index == -1) {
                     scenes.add(0);
-                } else if (result.get(index) < 0.4) {
+                } else if (result.get(index) > 1200) {
                     scenes.add(i);
                 } else {
                     int j = scenes.size() - 1;
@@ -128,6 +127,16 @@ public class SceneDetection {
             temp.add(shots.get(scenes.get(i)));
         }
         return temp;
+    }
+    int getMin(List<Double> l, double thresh) {
+        if (l.size() == 0) return -1;
+        int index = 0;
+        for (int i = l.size()-1; i >= 0; i--) {
+            if (l.get(i) <= thresh) {
+                return i;
+            }
+        }
+        return index;
     }
 
     int getMin(List<Double> l) {

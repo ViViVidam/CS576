@@ -13,7 +13,7 @@ import javax.imageio.ImageIO;
 public class ColorHistogramClustering {
     private static int bins = 256;
     //    private int threshold = 18000;
-    private int threshold = 1200;
+    private int threshold = 1000;
     private int count = 1;
     private int factor = 3;
     private int mainDistanceThreshold = 1000;
@@ -73,7 +73,7 @@ public class ColorHistogramClustering {
         return clusters;
     }
 
-    private double calculateDistance(BufferedImage img1, BufferedImage img2) {
+    public double calculateDistance(BufferedImage img1, BufferedImage img2) {
         int[] hist1 = calculateColorHistogram(img1);
         int[] hist2 = calculateColorHistogram(img2);
 
@@ -93,7 +93,7 @@ public class ColorHistogramClustering {
         return Math.sqrt(distance);
     }
 
-    private double calculateChiSquaredDistance(BufferedImage img1, BufferedImage img2) {
+    public double calculateChiSquaredDistance(BufferedImage img1, BufferedImage img2) {
         String matrix1 = "";
         String matrix2 = "";
         String index1 = "";

@@ -17,7 +17,7 @@ public class Indexing {
         this.videoMP4File = videoMP4File;
     }
     public List<Nodes> runIndexing()throws IOException{
-        SceneDetection sd = new SceneDetection(3,8,32);
+        SceneDetection sd = new SceneDetection(8,32);
 
         ShotDetection shotDetection = new ShotDetection(10);
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
@@ -26,7 +26,7 @@ public class Indexing {
         List<Integer> subshots = shotDetection.SubShotSeparation(this.filename,32,shots,30,480,270);
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         System.out.println(subshots);
-        List<Integer> scenes = sd.goBackM(this.filename,shots);
+        List<Integer> scenes = sd.goBackM(4,this.filename,shots);
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         System.out.println(scenes);
         List<Nodes> res = new ArrayList<>(scenes.size());
@@ -90,12 +90,12 @@ public class Indexing {
     }
 
     public List<List<Integer>> KeyframeToScene(List<Integer> keyframeIndices) {
-        SceneDetection sd = new SceneDetection(3,8,32);
+        SceneDetection sd = new SceneDetection(8,32);
         List<List<Integer>> res = new ArrayList<>();
         //res.add(keyframeIndices);
        //return res;
 
-        List<Integer> scenes = sd.goBackM(this.filename,keyframeIndices);
+        List<Integer> scenes = sd.goBackM(4,this.filename,keyframeIndices);
         System.out.println(scenes);
 
         int index = 0;
