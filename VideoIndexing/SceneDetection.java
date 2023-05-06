@@ -102,7 +102,7 @@ public class SceneDetection {
                     //result.add(sc.compareTo(dst));
                     result.add(chc.calculateChiSquaredDistance(source,dst));
                 }
-                System.out.println(result);
+                //System.out.println(result);
                 int index = getMin(result,1200);
                 if (index == -1) {
                     scenes.add(0);
@@ -115,7 +115,7 @@ public class SceneDetection {
                         j--;
                     }
                 }
-                System.out.println(scenes);
+               // System.out.println(scenes);
             }
             inputStream.close();
             fn.close();

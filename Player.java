@@ -31,12 +31,12 @@ public class Player {
     public static void main(String[] args) {
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         //System.load("D:\\BaiduNetdiskDownload\\opencv\\build\\java\\x64\\opencv_java470.dll");
-        String audioFile = "./The_Great_Gatsby_rgb/InputAudio.wav";
-        String videoFile = "./The_Great_Gatsby_rgb/InputVideo.rgb";
+        String audioFile = args[1];//"./The_Great_Gatsby_rgb/InputAudio.wav";
+        String videoFile = args[0];//"./The_Great_Gatsby_rgb/InputVideo.rgb";
         //call preIndexing
         float timeLength = getTimeLength(audioFile);
         List<Nodes> arr = null;
-        String videoMP4File = "D:\\academic\\codes\\Ready_Player_One_rgb\\The_Great_Gatsby_rgb\\InputVideo.mp4";
+        String videoMP4File = args[2];//"D:\\academic\\codes\\Ready_Player_One_rgb\\The_Great_Gatsby_rgb\\InputVideo.mp4";
         try {
             System.out.println("Indexing....");
             Indexing indexer = new Indexing(videoFile, videoMP4File,30);
@@ -62,7 +62,6 @@ public class Player {
         apThread.start();
         vpThread.start();
         try {
-            //apThread.notify();
             apThread.join();
             vpThread.join();
         } catch (Exception e) {

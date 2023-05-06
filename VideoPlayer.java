@@ -38,6 +38,7 @@ public class VideoPlayer implements Runnable {
     private int curY;
     private int curZ;
     final private Semaphore semp = new Semaphore(1);
+
     public VideoPlayer(String filename, BlockingQueue<Message> queueVideo, BlockingQueue<Message> queueAudio, List<Nodes> arr, float timeLength) {
         this.filename = filename;
         this.videoQ = queueVideo;
@@ -68,15 +69,15 @@ public class VideoPlayer implements Runnable {
         int idSh = -1;
         DefaultMutableTreeNode SceneNode = null;
         DefaultMutableTreeNode ShotNode = null;
-        for(int i = 0; i < this.arr.size(); i++) {
-            SceneNode = new DefaultMutableTreeNode("scene"+(i+1));
-            for(int j = 0; j < this.arr.get(i).getChildrenCount(); j++){
-                ShotNode = new DefaultMutableTreeNode("shot"+(j+1));
+        for (int i = 0; i < this.arr.size(); i++) {
+            SceneNode = new DefaultMutableTreeNode("scene" + (i + 1));
+            for (int j = 0; j < this.arr.get(i).getChildrenCount(); j++) {
+                ShotNode = new DefaultMutableTreeNode("shot" + (j + 1));
                 SceneNode.add(ShotNode);
-                for(int k = 0; k < this.arr.get(i).getChild(j).getChildrenCount(); k++){
-                    ShotNode.add(new DefaultMutableTreeNode("subshot"+(k+1)));
+                for (int k = 0; k < this.arr.get(i).getChild(j).getChildrenCount(); k++) {
+                    ShotNode.add(new DefaultMutableTreeNode("subshot" + (k + 1)));
                 }
-                if(ShotNode.getChildCount() == 1) ShotNode.removeAllChildren();
+                if (ShotNode.getChildCount() == 1) ShotNode.removeAllChildren();
             }
             root.add(SceneNode);
         }
@@ -186,8 +187,6 @@ public class VideoPlayer implements Runnable {
                 audioQ.add(new Message(Message.JUMP, 0));
             }
         });
-        //System.out.println(2222222);
-
 
 
         for (int i = 0; i < tree.getRowCount(); i++) {
@@ -195,16 +194,16 @@ public class VideoPlayer implements Runnable {
         }
         tree.setToggleClickCount(0);//disable double click
         TreeNode rootNode = ((TreeNode) tree.getModel().getRoot());
-        TreePath treePath = new TreePath(new TreeNode[]{rootNode,rootNode.getChildAt(0),rootNode.getChildAt(0).getChildAt(0)});
+        TreePath treePath = new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(0), rootNode.getChildAt(0).getChildAt(0)});
         tree.addSelectionPath(treePath);
 
         this.indexX = this.indexY = this.indexZ = 0; // for highlight
         this.curX = this.curY = this.curZ = 0;
         this.indexZ++;
-        if(this.indexZ == this.arr.get(curX).getChild(curY).getChildrenCount()){
+        if (this.indexZ == this.arr.get(curX).getChild(curY).getChildrenCount()) {
             this.indexZ = 0;
             this.indexY++;
-            if(this.indexY == this.arr.get(curX).getChildrenCount()){
+            if (this.indexY == this.arr.get(curX).getChildrenCount()) {
                 this.indexY = 0;
                 this.indexX = 0;
             }
@@ -215,12 +214,12 @@ public class VideoPlayer implements Runnable {
 
                 super.mouseClicked(e);
                 TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-                if(path==null) return; // no clicking the actual box;
+                if (path == null) return; // no clicking the actual box;
                 TreeNode node = (TreeNode) path.getLastPathComponent();
                 if (path == null) return;
                 try {
                     semp.acquire();
-                }catch (Exception ee){
+                } catch (Exception ee) {
                     ee.printStackTrace();
                 }
                 if (path.getPathCount() == 3) {
@@ -230,10 +229,10 @@ public class VideoPlayer implements Runnable {
                     int x = Integer.parseInt(parent.getUserObject().toString().substring(5));
                     int target = arr.get(x - 1).getChild(y - 1).getVal();
                     indexZ = curZ = 0;
-                    indexX = curX = x-1;
-                    indexY = curY = y-1;
+                    indexX = curX = x - 1;
+                    indexY = curY = y - 1;
                     indexZ++;
-                    if(arr.get(indexX).getChild(indexY).getChildrenCount()<=indexZ) {
+                    if (arr.get(indexX).getChild(indexY).getChildrenCount() <= indexZ) {
                         indexZ = 0;
                         indexY++;
                         if (arr.get(indexX).getChildrenCount() <= indexY) {
@@ -244,14 +243,13 @@ public class VideoPlayer implements Runnable {
                     //System.out.println(indexX+" "+indexY+" "+indexZ);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
-                }
-                else if(path.getPathCount()==4){
+                } else if (path.getPathCount() == 4) {
                     //System.out.println("main2: "+indexX+" "+indexY+" " +indexZ);
                     DefaultMutableTreeNode leaf = (DefaultMutableTreeNode) path.getLastPathComponent();
                     int z = Integer.parseInt(leaf.getUserObject().toString().substring(7));
-                    int y = Integer.parseInt(((DefaultMutableTreeNode)node.getParent()).getUserObject().toString().substring(4));
-                    int x = Integer.parseInt(((DefaultMutableTreeNode)node.getParent().getParent()).getUserObject().toString().substring(5));
-                    int target = arr.get(x - 1).getChild(y - 1).getChild(z-1).getVal();
+                    int y = Integer.parseInt(((DefaultMutableTreeNode) node.getParent()).getUserObject().toString().substring(4));
+                    int x = Integer.parseInt(((DefaultMutableTreeNode) node.getParent().getParent()).getUserObject().toString().substring(5));
+                    int target = arr.get(x - 1).getChild(y - 1).getChild(z - 1).getVal();
                     //System.out.println(target + " " + numFrames);
                     indexX = curX = x - 1;
                     indexY = curY = y - 1;
@@ -259,7 +257,7 @@ public class VideoPlayer implements Runnable {
                     indexZ++;
                     //System.out.println(indexY);
                     //System.out.println(arr.get(indexX).getChildrenCount());
-                    if(arr.get(indexX).getChild(indexY).getChildrenCount()<=indexZ) {
+                    if (arr.get(indexX).getChild(indexY).getChildrenCount() <= indexZ) {
                         indexZ = 0;
                         indexY++;
                         if (arr.get(indexX).getChildrenCount() <= indexY) {
@@ -267,7 +265,6 @@ public class VideoPlayer implements Runnable {
                             indexX++;
                         }
                     }
-                    //System.out.println(indexX+" "+indexY+" "+indexZ);
                     videoQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                     audioQ.add(new Message(Message.JUMP, 1.0 * target / numFrames));
                 }
@@ -277,12 +274,12 @@ public class VideoPlayer implements Runnable {
 
         // read the video file and display each frame
         try {
+            BufferedImage image = null;
             RandomAccessFile raf = new RandomAccessFile(file, "r");
             long pixelPerFrame = width * height * 3;
             numFrames = (int) (raf.length() / pixelPerFrame);
             System.out.println(raf.length() + " number of frames: " + this.numFrames);
             this.fps = Math.round(this.numFrames / this.timeLength);
-            //double videoTime = this.numFrames*1.0 / fps;
             System.out.println("setting fps to " + fps + ", Video time size: " + this.timeLength);
             FileChannel channel = raf.getChannel();
             byte[] buffer = new byte[width * height * 3];
@@ -296,7 +293,6 @@ public class VideoPlayer implements Runnable {
             time1 = System.currentTimeMillis();
 
             for (int i = 0; i < numFrames; i++) {
-                //System.out.println(i);
                 jumped = false;
                 if (i % fps == 0) {
                     // poll message
@@ -322,9 +318,7 @@ public class VideoPlayer implements Runnable {
                                 i = (int) (fps * second);
                                 if (pausetime != -1) pausetime = System.currentTimeMillis();
                                 time1 = System.currentTimeMillis();
-
                                 jumped = true;
-
                             }
                         }
 
@@ -332,34 +326,32 @@ public class VideoPlayer implements Runnable {
                     // highlight
                     try {
                         this.semp.acquire();
-                    }catch (Exception ee){
+                    } catch (Exception ee) {
                         ee.printStackTrace();
                     }
-                    if(curX < arr.size() && arr.get(curX).getChild(curY).getChild(curZ).getVal()>i){
-                        while (arr.get(curX).getChild(curY).getChild(curZ).getVal()>i){
+                    if (curX < arr.size() && arr.get(curX).getChild(curY).getChild(curZ).getVal() > i) {
+                        while (arr.get(curX).getChild(curY).getChild(curZ).getVal() > i) {
                             indexY = curY;
                             indexX = curX;
                             indexZ = curZ;
                             curZ--;
-                            if(curZ==-1){
+                            if (curZ == -1) {
                                 curY--;
-                                if(curY==-1){
+                                if (curY == -1) {
                                     curX--;
-                                    curY = arr.get(curX).getChildrenCount()-1;
+                                    curY = arr.get(curX).getChildrenCount() - 1;
                                 }
-                                curZ = arr.get(curX).getChild(curY).getChildrenCount()-1;
+                                curZ = arr.get(curX).getChild(curY).getChildrenCount() - 1;
                             }
                         }
                         tree.clearSelection();
-                        if(arr.get(curX).getChild(curY).getChildrenCount()==1){
-                            tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode,rootNode.getChildAt(curX),rootNode.getChildAt(curX).getChildAt(curY)}));
+                        if (arr.get(curX).getChild(curY).getChildrenCount() == 1) {
+                            tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(curX), rootNode.getChildAt(curX).getChildAt(curY)}));
+                        } else {
+                            tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode, rootNode.getChildAt(curX), rootNode.getChildAt(curX).getChildAt(curY), rootNode.getChildAt(curX).getChildAt(curY).getChildAt(curZ)}));
                         }
-                        else{
-                            tree.setSelectionPath(new TreePath(new TreeNode[]{rootNode,rootNode.getChildAt(curX),rootNode.getChildAt(curX).getChildAt(curY),rootNode.getChildAt(curX).getChildAt(curY).getChildAt(curZ)}));
-                        }
-                    }
-                    else if(indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal()<i) {
-                       // System.out.println("if: "+indexX+" "+indexY+" "+indexZ);
+                    } else if (indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal() < i) {
+                        // System.out.println("if: "+indexX+" "+indexY+" "+indexZ);
                         while (indexX < arr.size() && arr.get(indexX).getChild(indexY).getChild(indexZ).getVal() < i) {
                             curX = indexX;
                             curY = indexY;
@@ -391,17 +383,8 @@ public class VideoPlayer implements Runnable {
                 //buffer.clear();
                 channel.read(ByteBuffer.wrap(buffer));
                 //buffer.rewind();
-                BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
-                image.getRaster().setDataElements(0,0,width,height,buffer);
-                /*for (int y = 0; y < height; y++) {
-                    for (int x = 0; x < width; x++) {
-                        int r = buffer.get() & 0xff;
-                        int g = buffer.get() & 0xff;
-                        int b = buffer.get() & 0xff;
-                        int rgb = (r << 16) | (g << 8) | b;
-                        image.setRGB(x, y, rgb);
-                    }
-                }*/
+                image = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+                image.getRaster().setDataElements(0, 0, width, height, buffer);
                 label.setIcon(new ImageIcon(image));
                 progressBar.setValue(100 * i / numFrames);
                 frame.validate();

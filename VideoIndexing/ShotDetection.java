@@ -203,7 +203,7 @@ public class ShotDetection {
         final int INTERVAL = 20;
 
         byte[] frameData = new byte[numPixels * numChannels];
-        BlockBaseComparetor comparetor = new BlockBaseComparetor(8, k);
+        //BlockBaseComparetor comparetor = new BlockBaseComparetor(8, k);
         SsimCalculator sc = new SsimCalculator();
         shots.add((int) raf.length()/(numChannels*numPixels));
         raf.close();
@@ -218,7 +218,7 @@ public class ShotDetection {
         for (int i = 1; i < shots.size(); i++) {
             returnVal.add(shots.get(i - 1));
             if (((shots.get(i) - shots.get(i - 1)) / fps) > INTERVAL) {
-                System.out.println(shots.get(i)+" "+shots.get(i-1));
+                //System.out.println(shots.get(i)+" "+shots.get(i-1));
 
                 for (int j = shots.get(i - 1); j < shots.get(i); j++) {
                     fn.position(j * (long) numPixels * numChannels);
@@ -248,7 +248,7 @@ public class ShotDetection {
         }
         inputStream.close();
         shots.remove(shots.size()-1);
-        System.out.println(returnVal);
+        //System.out.println(returnVal);
         return returnVal;
     }
 }

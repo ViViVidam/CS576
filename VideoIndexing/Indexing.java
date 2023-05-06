@@ -23,7 +23,7 @@ public class Indexing {
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         List<Integer> shots = sd.getSceneStartFrames(this.videoMP4File);
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
-        List<Integer> subshots = shotDetection.SubShotSeparation(this.filename,32,shots,30,480,270);
+        List<Integer> subshots = shotDetection.SubShotSeparation(this.filename,32,shots,this.fps,480,270);
         //System.out.println(Runtime.getRuntime().totalMemory()+" " +Runtime.getRuntime().maxMemory());
         System.out.println(subshots);
         List<Integer> scenes = sd.goBackM(4,this.filename,shots);
@@ -77,13 +77,13 @@ public class Indexing {
             }
 
         }
-        System.out.println("res num: "+res.size());
+        /*System.out.println("res num: "+res.size());
         for(i = 0; i < res.size();i++){
             System.out.println("level1: "+res.get(i).getChildrenCount());
             for(int j = 0; j < res.get(i).getChildrenCount(); j++){
                 System.out.println("level2: "+res.get(i).getChild(j).getChildrenCount());
             }
-        }
+        }*/
         return res;
         //return KeyframeToScene(shotDetection.shotSeparationRecursive(this.filename,3,8));//3 is equal to 4 dont go to 64
         //return KeyframeToScene(Arrays.asList(1005, 1470, 1485, 1500, 1515, 1530, 1545, 1560, 1575, 1590, 1605, 1620, 1635, 1650, 1665, 1680, 1845, 1905, 2730, 2820, 3720, 4050, 4065, 4080, 4095, 4155, 4170, 4335, 4365, 4395, 4410, 4440, 4560, 4620, 4650, 4725, 4815, 4830, 4920, 4935, 5010, 5040, 5085, 5100, 5220, 5235, 5250, 5295, 5310, 5325, 5385, 5535));

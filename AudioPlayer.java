@@ -17,7 +17,6 @@ public class AudioPlayer implements Runnable{
     @Override
     public void run(){
         int fps = 30;
-
         File file2 = new File(this.filename); //
         try {
             FileInputStream ip = new FileInputStream(file2);
@@ -25,7 +24,7 @@ public class AudioPlayer implements Runnable{
             InputStream bufferedIn = new BufferedInputStream(ip);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
             AudioFormat format = audioStream.getFormat();
-            System.out.println(audioStream.getFrameLength() + " " + format.getFrameSize() + " " + format.getFrameRate() + " " + format.getSampleSizeInBits() + " " + format.getSampleRate());
+            //System.out.println(audioStream.getFrameLength() + " " + format.getFrameSize() + " " + format.getFrameRate() + " " + format.getSampleSizeInBits() + " " + format.getSampleRate());
             System.out.println("Audio time length: " + audioStream.getFrameLength() / format.getFrameRate());
             //AudioFormat format1 = new AudioFormat()
             int buffersize = (int) format.getFrameRate() / fps;
@@ -38,7 +37,6 @@ public class AudioPlayer implements Runnable{
             audioLine.start();
             byte[] bytesBuffer = new byte[2048];
             int bytesRead = -1;
-            System.out.println(audioStream.getFrameLength()+" " + 289*format.getFrameRate());
             long time1 = System.currentTimeMillis();
             boolean pause = false;
             while(true) {
